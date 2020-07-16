@@ -14,6 +14,7 @@ export HOME=/tmp
 export AWS_SHARED_CREDENTIALS_FILE=${CLUSTER_PROFILE_DIR}/.awscred
 export AWS_DEFAULT_REGION=us-east-1
 
+cluster_name=$(<"${SHARED_DIR}"/clustername.txt)
 installer_dir=/tmp/installer
 tfvars_path=/var/run/secrets/ci.openshift.io/cluster-profile/secret.auto.tfvars
 echo "$(date -u --rfc-3339=seconds) - Copying config from shared dir..."
@@ -50,4 +51,21 @@ terraform init -input=false -no-color
 # to fail - this is causing resource leaks. Do not refresh the state.
 terraform destroy -refresh=false -auto-approve -no-color &
 wait "$!"
+
+
+# after terraform has deleted the instances remove the ip addresses from IPAM
+echo "$(date -u --rfc-3339=seconds) - Request IP addresses based on tag (cluster_name) ..."
+
+ip_address_ids=$(curl -H "Authorization: Token ${ipam_token}" "http://${ipam_ip_address}:8080/api/ipam/ip-addresses/\?tag\=${cluster_name}" | jq -r '.results[].id')
+
+echo "$(date -u --rfc-3339=seconds) - Deleting IP address..."
+for id in ${ip_address_ids};
+do
+    curl \
+        -H "Authorization: Token ${ipam_token}" \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/json; indent=4" \
+        --request DELETE \
+        "http://${ipam_ip_address}:8080/api/ipam/ip-addresses/${id}/"
+done
 
