@@ -5,6 +5,17 @@ set -o errexit
 set -o pipefail
 
 trap 'CHILDREN=$(jobs -p); if test -n "${CHILDREN}"; then kill ${CHILDREN} && wait; fi' TERM
+HOME=/tmp
+export HOME
+
+cluster_name=$(<"${SHARED_DIR}"/clustername.txt)
+base_domain=$(<"${SHARED_DIR}"/basedomain.txt)
+cluster_domain=$(<"${SHARED_DIR}"/clusterdomain.txt)
+ipam_json_filename=ipam.auto.tfvars.json
+
+# TODO: where should ipam variables be defined?
+ipam_port=8080
+
 
 function allocate_ip() {
     args=$(jq -c -n \
@@ -18,18 +29,23 @@ function allocate_ip() {
         -H "Accept: application/json; indent=4" \
         --request POST \
         --data "${args}" \
-        "http://${ipam_ip_address}:8080/api/ipam/prefixes/${prefix_id}/available-ips/")
+        "http://${ipam_ip_address}:${ipam_port}/api/ipam/prefixes/${prefix_id}/available-ips/")
 
-    ipaddr=$(echo ${results} | jq -r '.address')
+    ipaddr=$(echo ${results} | jq -r '.address' | awk -F/ '{print $1}')
 }
 
-HOME=/tmp
-export HOME
+function get_prefix_id() {
+    results=$(curl \
+        -H "Authorization: Token ${ipam_token}" \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/json; indent=4" \
+        --request GET \
+        --data "${args}" \
+        "http://${ipam_ip_address}:${ipam_port}/api/ipam/prefixes/?prefix=${prefix}")
 
-cluster_name="${NAMESPACE}-${JOB_NAME_HASH}"
-base_domain="origin-ci-int-aws.dev.rhcloud.com"
-cluster_domain="${cluster_name}.${base_domain}"
-ipam_json_filename=ipam.auto.tfvars.json
+
+    prefix_id=$(echo ${results} | jq -r '.results[0].id' )
+}
 
 # Generate empty JSON strings
 

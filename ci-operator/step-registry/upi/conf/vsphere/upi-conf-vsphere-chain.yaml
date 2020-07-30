@@ -3,6 +3,7 @@ chain:
   steps:
   - ref: ipi-conf
   - ref: upi-conf-vsphere
+  - ref: upi-conf-vsphere-ipam
   - ref: upi-conf-vsphere-ova
   documentation: >-
     This chain generates the files necessary to deploy a vSphere UPI cluster.
