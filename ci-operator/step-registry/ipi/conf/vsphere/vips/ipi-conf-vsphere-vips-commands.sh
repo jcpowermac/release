@@ -13,6 +13,32 @@ ipam_token=$(grep -oP 'ipam_token\s*=\s*"\K[^"]+' ${tfvars_path})
 # 1: Ingress
 declare -a vips
 
+
+cat >> "${SHARED_DIR}/ipclaims.yaml" << EOF
+kind: List
+apiVersion: v1
+items:
+EOF
+
+for i in {0..1}
+do
+cat >> "${SHARED_DIR}/ipclaims.yaml" << EOF
+- apiVersion: ipam.metal3.io/v1alpha1
+  kind: IPClaim
+  metadata:
+    name: "${cluster_name}-${i}"
+    labels:
+      clusterName: "${cluster_name}"
+  spec:
+    pool:
+      name: ci-segment-pool
+      namespace: vsphere-ipam
+EOF
+done
+#export KUBECONFIG=/run/secrets/ci.openshift.
+#oc create -f "${SHARED_DIR}/ipclaims.yaml"
+#oc get ipclaim -l clusterName=${cluster_name} -o yaml
+
 echo "Reserving virtual ip addresses from the IPAM server..."
 for i in {0..1}
 do
@@ -32,3 +58,4 @@ done
 
 echo "Reserved the following IP addresses..."
 cat "${SHARED_DIR}"/vips.txt
+
