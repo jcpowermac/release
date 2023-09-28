@@ -1452,6 +1452,20 @@ resources:
   - bcr03a.dal10.1233
   - bcr03a.dal10.1234
   - bcr03a.dal10.1235
+  - bcr03a.dal10.1237
+  - bcr03a.dal10.1238
+  - bcr03a.dal10.1240
+  - bcr03a.dal10.1243
+  - bcr03a.dal10.1246
+  - bcr03a.dal10.1249
+  - bcr03a.dal10.1254
+  - bcr03a.dal10.1255
+  - bcr03a.dal10.1260
+  - bcr03a.dal10.1271
+  - bcr03a.dal10.1272
+  - bcr03a.dal10.1274
+  - bcr03a.dal10.1279
+  - bcr03a.dal10.1284
   state: free
   type: vsphere-2-quota-slice
 - names:
@@ -1531,8 +1545,13 @@ resources:
   min-count: 5
   state: free
   type: vsphere-ibm-7-quota-slice
-- max-count: 5
-  min-count: 5
+- names:
+  - bcr01a.dal10.1287
+  - bcr01a.dal10.1289
+  - bcr01a.dal10.1296
+  - bcr01a.dal10.1298
+  - bcr01a.dal10.1300
+  - bcr01a.dal10.1302
   state: free
   type: vsphere-multizone-2-quota-slice
 - names:
