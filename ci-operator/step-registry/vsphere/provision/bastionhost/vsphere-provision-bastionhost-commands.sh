@@ -6,6 +6,8 @@ set -o pipefail
 
 trap 'CHILDREN=$(jobs -p); if test -n "${CHILDREN}"; then kill ${CHILDREN} && wait; fi' TERM
 
+echo "HELLLOW......."
+
 declare vsphere_portgroup
 source "${SHARED_DIR}/vsphere_context.sh"
 
@@ -76,7 +78,7 @@ while [ ${loop} -gt 0 ]; do
 done
 
 if [ "x${bastion_ip}" == "x" ]; then
-  echo "Unabel to get ip of bastion host instance ${bastion_name}!"
+  echo "Unable to get ip of bastion host instance ${bastion_name}!"
   exit 1
 fi
 
@@ -127,6 +129,8 @@ EOF
   MIRROR_REGISTRY_URL="${bastion_host_dns}:5000"
   echo "${MIRROR_REGISTRY_URL}" >"${SHARED_DIR}/mirror_registry_url"
 fi
+
+echo "DEBUG bastion ip address: ${bastion_ip}"
 
 #Save bastion information
 echo "${bastion_ip}" >"${SHARED_DIR}/bastion_private_address"
