@@ -133,8 +133,8 @@ function enable_zones() {
         zone_group=$(jq -r ".AvailabilityZones[] | select(.ZoneName==\"${zone_name}\").GroupName" "${ARTIFACT_DIR}/edge-zones_${region}.json")
 
         echo_date "Trying to enable zone group ${zone_group} (${zone_type})"
-        opt_in_zone_group "${region_name}" "${zone_type}" "${zone_name}" "${zone_group}"
-    done <<< "$(cat "${ARTIFACT_DIR}/edge-zones-disabled_${region_name}.txt")"
+        opt_in_zone_group "${region}" "${zone_type}" "${zone_name}" "${zone_group}"
+    done <<< "$(cat "${ARTIFACT_DIR}/edge-zones-disabled_${region}.txt")"
 }
 
 # aws_describe_regions describes all regions in the globe, including disabled, creating a json file with raw result.

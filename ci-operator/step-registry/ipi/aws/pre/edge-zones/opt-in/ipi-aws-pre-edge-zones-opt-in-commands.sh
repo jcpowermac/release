@@ -11,7 +11,9 @@ set -o errexit
 set -o pipefail
 
 export AWS_SHARED_CREDENTIALS_FILE="${CLUSTER_PROFILE_DIR}/.awscred"
-export REGION="${LEASED_RESOURCE}"
+# LEASED_RESOURCE for aws-edge-zones-quota-slice is the full boskos resource name
+# (e.g. us-east-1--aws-edge-zones-quota-slice-0). Extract the AWS region (part before first "--").
+export REGION="${LEASED_RESOURCE%%--*}"
 echo "declare -A edge_zone_groups" > "${SHARED_DIR}/edge-zone-groups.env"
 
 # Print a message with timestamp
