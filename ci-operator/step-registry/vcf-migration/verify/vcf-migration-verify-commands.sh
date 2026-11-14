@@ -31,17 +31,52 @@ fi
 
 target_vcenter="$(<"${SHARED_DIR}/vcf-migration-target-vcenter.txt")"
 
-unhealthy_operators="$(oc get clusteroperators -o json | jq -r '
-  [.items[]
-   | select(
-       any(.status.conditions[]?; .type == "Available" and .status != "True")
-       or any(.status.conditions[]?; .type == "Progressing" and .status != "False")
-       or any(.status.conditions[]?; .type == "Degraded" and .status != "False")
-     )
-   | .metadata.name] | join(",")')"
-if [[ -n "${unhealthy_operators}" ]]; then
-  fail_with_details "cluster operators are unhealthy: ${unhealthy_operators}"
-fi
+# wait_for_cluster_operators_settled enforces the strict operator gate —
+# Available=True, Progressing=False, Degraded=False for every
+# clusteroperator; a fully settled cluster is the CI end-state — but
+# re-evaluates it for up to 15 minutes before failing: a control plane
+# replacement is followed by a static-pod revision roll (etcd,
+# kube-apiserver, openshift-apiserver report Progressing while nodes move
+# to the new revision) that settles on its own within minutes. Failed reads
+# are retried within the same window; if the window expires without a
+# successful read the step fails loudly rather than passing silently.
+function wait_for_cluster_operators_settled() {
+  local co_json unhealthy_operators co_read_ok=false
+  local settle_deadline=$(( $(date +%s) + 900 ))
+
+  while :; do
+    if co_json="$(oc get clusteroperators -o json 2>/dev/null)"; then
+      co_read_ok=true
+      unhealthy_operators="$(jq -r '
+        [.items[]
+         | select(
+             any(.status.conditions[]?; .type == "Available" and .status != "True")
+             or any(.status.conditions[]?; .type == "Progressing" and .status != "False")
+             or any(.status.conditions[]?; .type == "Degraded" and .status != "False")
+           )
+         | .metadata.name] | join(",")' <<< "${co_json}")"
+      if [[ -z "${unhealthy_operators}" ]]; then
+        return 0
+      fi
+      log "cluster operators still settling: ${unhealthy_operators}"
+    else
+      log "failed to read cluster operators; retrying"
+    fi
+    if (( $(date +%s) >= settle_deadline )); then
+      break
+    fi
+    sleep 30
+  done
+
+  if [[ -n "${unhealthy_operators:-}" ]]; then
+    fail_with_details "cluster operators are unhealthy: ${unhealthy_operators}"
+  fi
+  if [[ "${co_read_ok}" != true ]]; then
+    fail_with_details "failed to read cluster operators within the settle window"
+  fi
+}
+
+wait_for_cluster_operators_settled
 
 not_ready_nodes="$(oc get nodes -o json | jq -r '
   [.items[]
