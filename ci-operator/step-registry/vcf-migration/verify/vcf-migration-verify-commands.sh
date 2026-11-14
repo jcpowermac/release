@@ -18,6 +18,7 @@ function fail_with_details() {
   oc get nodes -o wide || true
   oc get infrastructure cluster -o name || true
   oc -n openshift-machine-api get machinesets,machines -o name || true
+  oc get machineconfigpools -o wide || true
   oc -n "${MIGRATION_NAMESPACE}" get "vmwarecloudfoundationmigration/${MIGRATION_NAME}" \
     -o jsonpath='{range .status.conditions[*]}{.type}={.status} {.reason}{"\n"}{end}' || true
   exit 1
