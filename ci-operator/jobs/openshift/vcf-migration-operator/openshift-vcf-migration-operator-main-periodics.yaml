@@ -346,7 +346,7 @@ periodics:
         secretName: result-aggregator
 - agent: kubernetes
   cluster: vsphere02
-  cron: 50 19 * * 3
+  cron: 0 19 1 * *
   decorate: true
   decoration_config:
     sparse_checkout_files:

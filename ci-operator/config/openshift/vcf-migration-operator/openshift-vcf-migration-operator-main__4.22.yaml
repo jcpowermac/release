@@ -52,7 +52,7 @@ tests:
       SETUP_IMAGE_REGISTRY_WITH_PVC: "false"
     workflow: vcf-migration-e2e
 - as: e2e-vsphere-vcf-migration-manual
-  cron: 50 19 * * 3
+  cron: 0 19 1 * *
   reporter_config:
     channel: '#forum-ocp-splat-alerts'
     job_states_to_report:
